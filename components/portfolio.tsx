@@ -1,6 +1,6 @@
 'use client'
 
-import { FormEvent, useState } from 'react'
+import { FormEvent, useEffect, useState } from 'react'
 import {
   ArrowDownToLine,
   ArrowUpRight,
@@ -49,7 +49,12 @@ function SectionHeading({ eyebrow, title, description }: { eyebrow: string; titl
 
 export default function Portfolio() {
   const [dark, setDark] = useState(true)
+  const [mounted, setMounted] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
   const [sent, setSent] = useState(false)
 
   function submitContact(event: FormEvent<HTMLFormElement>) {
@@ -65,7 +70,7 @@ export default function Portfolio() {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 lg:px-8">
         <a href="#top" className="font-mono text-sm font-semibold tracking-tight">AA<span className="text-primary">.</span></a>
         <nav className="hidden items-center gap-6 md:flex">{navItems.map((item) => <a key={item} href={`#${item}`} className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground">{item}</a>)}</nav>
-        <div className="flex items-center gap-2"><Button variant="ghost" size="icon" aria-label="Toggle color theme" onClick={toggleTheme}>{dark ? <Sun /> : <Moon />}</Button><Sheet open={menuOpen} onOpenChange={setMenuOpen}><SheetTrigger className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-sm transition-all outline-none hover:bg-muted focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:hidden" aria-label="Open menu"><Menu /></SheetTrigger><SheetContent><SheetTitle className="font-mono">Navigation</SheetTitle><nav className="mt-8 flex flex-col gap-5">{navItems.map((item) => <a key={item} href={`#${item}`} onClick={() => setMenuOpen(false)} className="font-mono text-sm uppercase tracking-wider">{item}</a>)}</nav></SheetContent></Sheet></div>
+        <div className="flex items-center gap-2"><Button variant="ghost" size="icon" aria-label="Toggle color theme" onClick={toggleTheme}>{mounted ? (dark ? <Sun /> : <Moon />) : <span className="size-4" aria-hidden="true" />}</Button><Sheet open={menuOpen} onOpenChange={setMenuOpen}><SheetTrigger className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-sm transition-all outline-none hover:bg-muted focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:hidden" aria-label="Open menu"><Menu /></SheetTrigger><SheetContent><SheetTitle className="font-mono">Navigation</SheetTitle><nav className="mt-8 flex flex-col gap-5">{navItems.map((item) => <a key={item} href={`#${item}`} onClick={() => setMenuOpen(false)} className="font-mono text-sm uppercase tracking-wider">{item}</a>)}</nav></SheetContent></Sheet></div>
       </div>
     </header>
 
