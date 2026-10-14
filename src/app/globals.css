@@ -1,26 +1,170 @@
 @import "tailwindcss";
 
+/* next-themes writes class="dark" on <html>. */
+@custom-variant dark (&:is(.dark *));
+
+/*
+  Palette: warm paper, warm ink, one burnt-amber accent.
+  Deliberately not the default neutral ramp — a portfolio that looks like
+  every other shadcn install is the problem this is solving.
+
+  Two accent tokens on purpose:
+    --accent        display use — large text, fills, rules. ~3:1 on paper.
+    --accent-strong small text and links. Darkened to clear 4.5:1.
+*/
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --paper: oklch(0.985 0.005 85);
+  --paper-raised: oklch(1 0 0);
+  --paper-sunken: oklch(0.962 0.006 82);
+
+  /* Measured on --paper: ink 16.7:1, muted 8.0:1, faint 4.6:1 — all clear
+     AA for normal text, so the quietest metadata is still readable. */
+  --ink: oklch(0.22 0.012 60);
+  --ink-muted: oklch(0.43 0.012 60);
+  --ink-faint: oklch(0.53 0.011 60);
+
+  --rule: oklch(0.9 0.006 75);
+  --rule-strong: oklch(0.82 0.008 72);
+
+  --accent: oklch(0.555 0.158 46);
+  --accent-strong: oklch(0.47 0.145 45);
+  --accent-wash: oklch(0.955 0.028 70);
+  --accent-contrast: oklch(0.99 0.005 85);
+
+  color-scheme: light;
+}
+
+.dark {
+  --paper: oklch(0.21 0.008 60);
+  --paper-raised: oklch(0.252 0.009 60);
+  --paper-sunken: oklch(0.178 0.008 60);
+
+  --ink: oklch(0.95 0.006 80);
+  --ink-muted: oklch(0.75 0.011 75);
+  --ink-faint: oklch(0.635 0.011 70);
+
+  --rule: oklch(0.31 0.011 65);
+  --rule-strong: oklch(0.4 0.013 65);
+
+  --accent: oklch(0.75 0.14 60);
+  --accent-strong: oklch(0.82 0.125 64);
+  --accent-wash: oklch(0.26 0.032 55);
+  --accent-contrast: oklch(0.19 0.02 55);
+
+  color-scheme: dark;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-paper: var(--paper);
+  --color-paper-raised: var(--paper-raised);
+  --color-paper-sunken: var(--paper-sunken);
+
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-wash: var(--accent-wash);
+  --color-accent-contrast: var(--accent-contrast);
+
+  --font-display: var(--font-instrument-serif), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, "SF Mono", Menlo, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    border-color: var(--rule);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    /* Clear the sticky header when jumping to an anchor. */
+    scroll-padding-top: 5rem;
+  }
+
+  body {
+    background-color: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: var(--accent);
+    color: var(--accent-contrast);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent-strong);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  /* Small-caps monospace metadata label. Used for section eyebrows. */
+  .label {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  /* Editorial display type. Serif, tight, optically large. */
+  .display {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 0.98;
+  }
+}
+
+/*
+  Entrance animation. Kept in CSS rather than a library — it is one keyframe,
+  and a scroll-reveal dependency is not worth 15 KB for this.
+*/
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.rise {
+  animation: rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
