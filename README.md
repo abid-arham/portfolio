@@ -3,7 +3,7 @@
 Personal site and engineering write-ups. Built with Next.js 16, React 19, TypeScript and
 Tailwind CSS 4.
 
-**Live:** https://your-domain.com <!-- update once deployed -->
+**Live:** https://abidarham.pro.bd
 
 ![Home page](public/work/white-h.webp)
 
