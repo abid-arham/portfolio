@@ -3,6 +3,7 @@ import Image from "next/image"
 
 import { container } from "@/components/layout/section"
 import { ButtonAnchor, ButtonLink } from "@/components/ui/button"
+import { DepthText } from "@/components/ui/depth-text"
 import { profile } from "@/data/profile"
 import { cn } from "@/lib/utils"
 
@@ -46,15 +47,23 @@ export function Hero() {
           )}
         >
           <div>
-            <h1 className="rise max-w-3xl">
-              <span className="label mb-5 block">
-                {profile.name} — {profile.role}
-              </span>
-              <span className="display block text-[clamp(2.75rem,7vw,4.75rem)]">
-                I build web apps
-                <br />
-                from the <span className="italic text-accent">schema</span> up.
-              </span>
+            <div className="rise mb-7">
+              <DepthText
+                text={profile.name}
+                fontSize="clamp(2.25rem,6.5vw,4rem)"
+                layers={18}
+                depth={1.8}
+                tilt={6}
+              />
+              <p className="label mt-3">{profile.role}</p>
+            </div>
+
+            <h1
+              className="rise display max-w-3xl text-[clamp(2.25rem,5.5vw,3.75rem)]"
+              style={{ animationDelay: "60ms" }}
+            >
+              I build web apps from the{" "}
+              <span className="italic text-accent">schema</span> up.
             </h1>
 
             <p

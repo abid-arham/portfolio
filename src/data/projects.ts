@@ -1,6 +1,12 @@
+/**
+ * A paragraph, or a code block. Case studies about data access are much
+ * weaker when the one line that carries the argument is paraphrased.
+ */
+export type CaseStudyBlock = string | { code: string }
+
 export interface CaseStudySection {
   heading: string
-  body: string[]
+  body: CaseStudyBlock[]
 }
 
 export interface Project {
@@ -13,9 +19,20 @@ export interface Project {
   stack: string[]
   liveUrl?: string
   repoUrl?: string
+  /**
+   * For projects that span more than one repo or deployment. The primary
+   * liveUrl/repoUrl stay the front door; these sit beside them.
+   */
+  extraLinks?: { label: string; href: string }[]
   /** Client work with a private repo — say so rather than leaving a dead link. */
   privateRepo?: boolean
   featured?: boolean
+  /**
+   * Small caption on the featured card. Must be literally true of this
+   * project — it used to be hardcoded, which made it a lie for anything
+   * that wasn't client work.
+   */
+  badge?: string
   cover: {
     src: string
     alt: string
@@ -36,6 +53,85 @@ export interface Project {
 
 export const projects: Project[] = [
   {
+    slug: "quad",
+    title: "Quad",
+    subtitle: "University management system",
+    summary:
+      "Course registration, grading, transcripts and tuition for three different roles — a TypeScript API and a Next.js front end, both deployed, with demo accounts you can sign into.",
+    year: "2026",
+    stack: [
+      "Next.js 16",
+      "React 19",
+      "TypeScript",
+      "Express",
+      "Prisma",
+      "PostgreSQL",
+      "TanStack Query",
+      "Stripe",
+    ],
+    liveUrl: "https://assignment-7-three-xi.vercel.app/",
+    repoUrl: "https://github.com/abid-arham/assignment-7",
+    extraLinks: [
+      { label: "API code", href: "https://github.com/abid-arham/assignment-6" },
+      { label: "Live API", href: "https://assignment-6-tau-wine.vercel.app/" },
+    ],
+    featured: true,
+    badge: "Live demo · sign in as any role",
+    cover: {
+      src: "/work/quad.webp",
+      alt: "The Quad course catalogue, filtered by department",
+      width: 1440,
+      height: 900,
+    },
+    highlights: [
+      "Three role-based workspaces — student, instructor, registrar — over one Express and Prisma API.",
+      "The last seat in a section is claimed with a conditional SQL UPDATE, so two students racing for it can't both win.",
+      "Access and refresh tokens live in httpOnly cookies; refresh tokens are stored hashed and revoked the moment they're rotated.",
+      "Prerequisite chains are walked before insert, and a cycle is rejected with a 409 instead of being stored.",
+    ],
+    caseStudy: {
+      intro:
+        "Quad is a university management system: students register for courses and pay tuition, instructors grade their sections, and the registrar runs the catalogue. It's the largest thing I've built, and the parts worth talking about are all places where the obvious implementation is quietly wrong.",
+      sections: [
+        {
+          heading: "Two students, one seat",
+          body: [
+            "Enrolling a student means checking that a section has room and then taking a seat. Written the obvious way — read the count, compare it to the capacity, write the enrollment — that is a race. Two requests can both read 29 of 30 and both proceed, and the section ends up over capacity. Wrapping it in a transaction alone doesn't fix it either; under the default isolation level both reads still see the pre-update value.",
+            "The check and the increment have to be the same statement, so the database decides the winner. That turned out to need raw SQL, because Prisma's where clause can't compare one column against another:",
+            {
+              code: 'UPDATE "Section" SET "enrolledCount" = "enrolledCount" + 1\nWHERE id = ${sectionId} AND "enrolledCount" < capacity',
+            },
+            "If that reports zero rows updated, the section was full and the request gets a 409. The row lock PostgreSQL takes for the UPDATE is what serialises the two requests. A unique constraint on (student, section) catches the other race — the same student double-clicking register — and the P2002 it throws is translated into the same 409 rather than leaking as a 500.",
+          ],
+        },
+        {
+          heading: "Tokens the browser can't read",
+          body: [
+            "Both tokens are httpOnly cookies, so client JavaScript never touches them and an XSS bug can't walk off with a session. The access token expires with its JWT; the refresh token lasts seven days.",
+            "Refresh tokens are stored as hashes, not plaintext — the database holds a `tokenHash`, so a dump of that table doesn't hand over working sessions. Rotating one revokes the old row in the same step, and refresh re-checks that the user still exists and is still active, so deactivating an account ends its sessions rather than waiting for them to expire.",
+            "On the front end, `proxy.ts` verifies the access token's signature with `jose` and enforces which role may enter which area, and each role layout checks again on the server. The duplication is deliberate: the middleware is a gate, not a guarantee.",
+          ],
+        },
+        {
+          heading: "A cache I was willing to trust this time",
+          body: [
+            "On an earlier project I shipped a cache that served authenticated, per-user responses to the wrong user. That bug is why the caching here is deliberately narrow.",
+            "Only the public course catalogue is cached, keyed by the full query, for sixty seconds — data that is identical for every visitor, signed in or not. Nothing scoped to a user goes near it. Every write to a course invalidates the whole `courses:list:` prefix rather than trying to work out which cached queries a given edit affected, because that calculation is exactly the kind of cleverness that gets it wrong.",
+            "Catalogue rows are soft-deleted with a `deletedAt` timestamp and filtered out on read, so removing a course can't orphan the enrollment history that points at it.",
+          ],
+        },
+        {
+          heading: "Prerequisites that can't loop",
+          body: [
+            "Prerequisites form a graph, and nothing stops an administrator from making A require B while B already requires A. Stored, that cycle makes enrollment unsatisfiable for every student and the error surfaces far away from the edit that caused it.",
+            "So adding a prerequisite walks the existing chain first and refuses with a 409 if the new edge would close a loop. Rejecting bad data at the write is cheaper than detecting it at every read, and the registrar gets the error while still looking at the form that caused it.",
+          ],
+        },
+      ],
+    },
+  },
+
+  {
     slug: "white-h",
     title: "White.H",
     subtitle: "Clothing and beauty e-commerce store",
@@ -44,8 +140,8 @@ export const projects: Project[] = [
     year: "2026",
     stack: ["React", "Redux Toolkit", "TypeScript", "Express", "MongoDB", "Docker"],
     liveUrl: "https://client-orcin-alpha-86.vercel.app",
+    badge: "Client work · in production",
     privateRepo: true,
-    featured: true,
     cover: {
       src: "/work/white-h.webp",
       alt: "The White.H storefront home page",
@@ -161,6 +257,9 @@ export const projects: Project[] = [
     stack: ["Next.js", "Express", "TypeScript", "Prisma", "PostgreSQL"],
     liveUrl: "https://assignment-5-alpha-brown.vercel.app",
     repoUrl: "https://github.com/abid-arham/FixItNow",
+    extraLinks: [
+      { label: "API code", href: "https://github.com/abid-arham/Assignment-4-1" },
+    ],
     featured: false,
     cover: {
       src: "/work/fixitnow.webp",

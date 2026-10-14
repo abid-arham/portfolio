@@ -18,6 +18,25 @@ export function generateStaticParams() {
   return caseStudies.map((project) => ({ slug: project.slug }))
 }
 
+/**
+ * Renders `backtick spans` in case-study prose as inline code. The copy was
+ * already written with them; without this they render as literal backticks.
+ */
+function withInlineCode(text: string) {
+  return text.split(/`([^`]+)`/g).map((part, index) =>
+    index % 2 === 1 ? (
+      <code
+        key={index}
+        className="rounded bg-paper-sunken px-1 py-0.5 font-mono text-[0.875em] text-ink"
+      >
+        {part}
+      </code>
+    ) : (
+      part
+    )
+  )
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -99,6 +118,17 @@ export default async function CaseStudyPage({
                   <GitHubMark className="size-3.5" /> Source
                 </a>
               )}
+              {project.extraLinks?.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="inline-flex items-center gap-1.5 text-ink-muted transition-colors hover:text-ink"
+                >
+                  {link.label} <ArrowUpRight className="size-3.5" />
+                </a>
+              ))}
               {project.privateRepo && (
                 <span className="inline-flex items-center gap-1.5 text-ink-faint">
                   <Lock className="size-3.5" /> Private repo — client work
@@ -132,9 +162,18 @@ export default async function CaseStudyPage({
               <section key={section.heading}>
                 <h2 className="display mb-5 text-3xl">{section.heading}</h2>
                 <div className="space-y-4 text-[1.0625rem] leading-relaxed text-ink-muted">
-                  {section.body.map((paragraph) => (
-                    <p key={paragraph.slice(0, 32)}>{paragraph}</p>
-                  ))}
+                  {section.body.map((block, index) =>
+                    typeof block === "string" ? (
+                      <p key={`${section.heading}-${index}`}>{withInlineCode(block)}</p>
+                    ) : (
+                      <pre
+                        key={`${section.heading}-${index}`}
+                        className="overflow-x-auto rounded-xl border border-rule bg-paper-sunken p-4 font-mono text-[0.8125rem] leading-relaxed text-ink"
+                      >
+                        <code>{block.code}</code>
+                      </pre>
+                    )
+                  )}
                 </div>
               </section>
             ))}

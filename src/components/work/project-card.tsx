@@ -38,6 +38,17 @@ function Links({ project }: { project: Project }) {
           <GitHubMark className="size-3.5" /> Code
         </a>
       )}
+      {project.extraLinks?.map((link) => (
+        <a
+          key={link.href}
+          href={link.href}
+          target="_blank"
+          rel="noreferrer noopener"
+          className="inline-flex items-center gap-1.5 text-ink-muted transition-colors hover:text-ink"
+        >
+          {link.label} <ArrowUpRight className="size-3.5" />
+        </a>
+      ))}
       {project.privateRepo && (
         <span className="inline-flex items-center gap-1.5 text-ink-faint">
           <Lock className="size-3.5" /> Private repo — client work
@@ -72,9 +83,11 @@ export function FeaturedProjectCard({ project }: { project: Project }) {
       <div>
         <div className="mb-3 flex flex-wrap items-center gap-3">
           <span className="label">{project.year}</span>
-          <span className="rounded-full bg-accent px-2.5 py-1 font-mono text-[0.625rem] uppercase tracking-wider text-accent-contrast">
-            Client work · in production
-          </span>
+          {project.badge && (
+            <span className="rounded-full bg-accent px-2.5 py-1 font-mono text-[0.625rem] uppercase tracking-wider text-accent-contrast">
+              {project.badge}
+            </span>
+          )}
         </div>
 
         <h3 className="display text-3xl sm:text-4xl">{project.title}</h3>
