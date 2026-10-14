@@ -18,6 +18,8 @@ export const profile = {
    * Set to null to drop the portrait entirely — the hero reflows to a single
    * column and stays complete. Never point this at a placeholder.
    */
+  /** Kept as JPEG: next/image still serves WebP to browsers, and the OG
+   *  image renderer can't decode WebP source. One file covers both. */
   portraitUrl: "/portrait.jpg" as string | null,
   portraitAlt: "Abid Arham",
 
