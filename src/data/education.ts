@@ -14,16 +14,4 @@ export const education: EducationEntry[] = [
     note: "Software Architecture coursework: creational and behavioural design patterns applied to database configuration and payment modules.",
     date: "Expected April 2027",
   },
-  {
-    institution: "Square High School & College, Pabna",
-    credential: "Higher Secondary Certificate",
-    detail: "GPA 5.00",
-    date: "2021",
-  },
-  {
-    institution: "Square High School & College, Pabna",
-    credential: "Secondary School Certificate",
-    detail: "GPA 5.00",
-    date: "2019",
-  },
 ]
