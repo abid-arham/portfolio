@@ -23,16 +23,9 @@ export const profile = {
   portraitUrl: "/portrait.jpg" as string | null,
   portraitAlt: "Abid Arham",
 
-  /**
-   * LeetCode is currently at 10 solved. The card is deliberately a single
-   * flag so it can be turned off in one edit if it ever reads as thin.
-   */
-  showLeetCodeStats: true,
-
   socials: [
     { label: "GitHub", href: "https://github.com/abid-arham" },
     { label: "LinkedIn", href: "https://www.linkedin.com/in/abid-arham-111457245/" },
-    { label: "LeetCode", href: "https://leetcode.com/u/abidarham/" },
   ] satisfies SocialLink[],
 
   about: [

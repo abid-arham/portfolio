@@ -1,5 +1,26 @@
 import type { SVGProps } from "react"
 
+import { getTechIcon } from "@/lib/tech-icons"
+import { cn } from "@/lib/utils"
+
+/** A tech's brand mark in currentColor, or nothing when the label has no mark. */
+export function TechIcon({ label, className }: { label: string; className?: string }) {
+  const icon = getTechIcon(label)
+  if (!icon) return null
+
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden
+      focusable="false"
+      className={cn("shrink-0", className)}
+    >
+      <path d={icon.path} />
+    </svg>
+  )
+}
+
 /**
  * lucide-react v1 dropped brand marks, and the generic code glyph it suggests
  * instead is not recognisable as GitHub. One inline path is cheaper than

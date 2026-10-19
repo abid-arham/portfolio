@@ -1,4 +1,7 @@
+import { Fragment } from "react"
+
 import { Section } from "@/components/layout/section"
+import { TechIcon } from "@/components/ui/icons"
 import { profile } from "@/data/profile"
 import { skills } from "@/data/skills"
 
@@ -20,7 +23,15 @@ export function About() {
             >
               <dt className="label mb-2.5">{group.category}</dt>
               <dd className="text-[0.9375rem] leading-relaxed text-ink-muted">
-                {group.items.join(" · ")}
+                {group.items.map((item, i) => (
+                  <Fragment key={item}>
+                    {i > 0 && " · "}
+                    <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                      <TechIcon label={item} className="size-3.5" />
+                      {item}
+                    </span>
+                  </Fragment>
+                ))}
               </dd>
             </div>
           ))}
