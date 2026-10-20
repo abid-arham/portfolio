@@ -248,6 +248,86 @@ export const projects: Project[] = [
   },
 
   {
+    slug: "aegis",
+    title: "Aegis",
+    subtitle: "Layered safety architecture for an LLM finance assistant",
+    summary:
+      "A software-architecture term project, built with Ratul Ferdous Hasan, that moves an LLM finance assistant's safety out of the model and into a layer every request has to cross — with a TypeScript prototype that runs the evaluation.",
+    year: "2026",
+    stack: ["TypeScript", "Node.js 22", "node:test", "Design patterns"],
+    cover: {
+      src: "/work/aegis.webp",
+      alt: "Aegis ablation output: 15 of 15 policy-violating prompts blocked with mediation on, none with it off",
+      width: 1440,
+      height: 900,
+    },
+    highlights: [
+      "The reasoning layer is untrusted: it imports nothing from the data layer, and every request, tool call and drafted answer crosses one mediation layer.",
+      "Account IDs never enter the reasoning context — it gets opaque handles like H-0001, resolved only inside the trust boundary.",
+      "Tools are deny-by-default; adding a sixth took a new file and a one-line grant, with zero lines changed in the enforcement layer.",
+      "Chain of Responsibility, Adapter, Command, Repository and Observer, with zero runtime dependencies and 13 node:test tests.",
+    ],
+    caseStudy: {
+      intro:
+        "Aegis was our term project for Software Architecture & Design Patterns, designed and built with Ratul Ferdous Hasan. The brief was a personal-finance assistant driven by a language model, and the question we kept coming back to was where its safety actually lives. In most designs it lives in the prompt — inside the one component nobody on the team controls. We moved it out.",
+      sections: [
+        {
+          heading: "Safety the model can't opt out of",
+          body: [
+            "The usual way to stop an LLM assistant from recommending stocks or reading out account numbers is to ask it not to: a system prompt, a classifier, a trained-in refusal. All of that sits inside the model. It's probabilistic, it can't be audited request by request, and a provider update can change it without anyone touching the application.",
+            "Aegis splits the system into four layers. L1 takes the request. L2 plans, calls tools and drafts the answer, and is treated as untrusted. L4 holds the data and five read-only tools. L3 sits between them as a reference monitor: the request is screened on the way in, every tool call is authorised on the way down, and every drafted answer is screened on the way out. The orchestrator in L2 holds a reference to the mediator and imports nothing from L4, so there is no second route to the data.",
+            "Each check is a small policy object in an ordered chain — Chain of Responsibility — and the first deny wins. The rule in that chain that matters most is what happens when a policy itself breaks:",
+            {
+              code: "} catch (err) {\n  v = {\n    allow: false,\n    stage: `${this.label}:${p.name}`,\n    reason: `fail-closed:${(err as Error).message}`,\n  };",
+            },
+            "A bug in enforcement becomes a refusal, never a pass. Every verdict, allow or deny, is published to an event bus, so the audit trail records what the system actually decided rather than what the model says it did.",
+          ],
+        },
+        {
+          heading: "An account number the model never sees",
+          body: [
+            "On DevPulse the rule was that the reporter comes from the verified token, never from the request body — the untrusted side doesn't get to name the identity. Aegis takes that one step further: the untrusted side never holds the identity at all.",
+            "When a session opens, the mediator issues an opaque handle for the account, and the reasoning context is built with the handle instead of the ID. The real ID stays in a map inside L3, and only the mediator can resolve it:",
+            {
+              code: "resolve(handle: Handle): string {\n  const real = this.toReal.get(handle);\n  if (!real)\n    throw new Error(`handle vault: unresolvable handle ${String(handle)}`);\n  return real;\n}",
+            },
+            "A forged or stale handle throws instead of falling back to some default account. On the way out, a disclosure policy also refuses any answer containing a raw account ID, a card-like number or the handle itself — but that is the second check, not the main one. The point of the handle is that no filter is what stands between the model and the leak. There is nothing in its context to leak.",
+          ],
+        },
+        {
+          heading: "Closed by default",
+          body: [
+            "The model chooses which tool to call, so the tool name is untrusted input too. The capability broker allows only the names in the session's grant set; anything else — including a tool that exists in L4 but was never granted — is denied:",
+            {
+              code: 'if (this.granted.has(tool)) {\n  return { allow: true, stage: "broker", reason: `granted:${tool}` };\n}\nreturn { allow: false, stage: "broker", reason: `ungranted-capability:${tool}` };',
+            },
+            "That shape is what made our modifiability claim testable rather than asserted. Tools in L4 are Command objects behind one interface, so adding a sixth — a category breakdown — was one new file plus one line in the grant list, and one keyword route in L2 so the test backend could pick it. Before the grant the broker refuses it; after, its answers pass through the same, unmodified egress checks. Zero lines changed in the mediator, the policies, the broker or the vault.",
+            "A security layer that has to be edited every time a feature lands will eventually be edited wrong. Keeping new features to data and leaf code is how you avoid that.",
+          ],
+        },
+        {
+          heading: "Every number has to come from a tool",
+          body: [
+            "In finance the expensive failure is a wrong number — a figure the model made up reads exactly like one it computed. So before an answer leaves, the grounding verifier pulls every number out of it and checks each against the numbers the tools actually returned in that turn:",
+            {
+              code: 'if (!allowed.some((a) => Math.abs(a - c) <= 0.01)) {\n  return deny("grounding", `ungrounded-number:${c}`);\n}',
+            },
+            "Numbers inside identifiers are stripped before the check, so an account ID can't slip through as a grounded figure; it falls to the disclosure policy instead. It's a narrow check — it proves a number came from a tool, not that the sentence around it uses that number correctly. But it turns \"the model shouldn't invent figures\" into something the code enforces.",
+          ],
+        },
+        {
+          heading: "Measuring the layer, not the model",
+          body: [
+            "Test a guard-railed assistant built on a real model and you can't tell whether a refusal came from your architecture or from the model's own training. So the default backend isn't a model. It's keyword-routed behind the same Adapter interface an API backend would use, and when it doesn't recognise a request it simply complies. It has no safety behaviour of its own.",
+            "That leaves the mediation switch as the only variable. Over 21 labelled prompts — 15 policy-violating, 6 benign — mediation on blocked 15 of 15 and refused none of the benign ones; mediation off blocked none. The data is a seeded synthetic corpus of 1,830 transactions across 8 users, with one prompt-injection payload planted in a transaction description to exercise the indirect path.",
+            "We were careful about what that does and doesn't show. The block patterns were written against those same 15 prompts, so 15/15 is an in-sample result: it shows the mechanism fires and that it lives in L3, not that it generalises to paraphrases. And 0/15 with mediation off isn't a discovered failure rate — we removed the only enforcement there was. The honest next step is a held-out paraphrase set; until then the pattern-based ingress checks are defence in depth, not a guarantee.",
+          ],
+        },
+      ],
+    },
+  },
+
+  {
     slug: "fixitnow",
     title: "FixItNow",
     subtitle: "Home-services marketplace",

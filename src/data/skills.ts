@@ -36,6 +36,6 @@ export const skills: SkillGroup[] = [
   },
   {
     category: "Fundamentals",
-    items: ["Data structures & algorithms", "OOP", "Design patterns"],
+    items: ["Data structures & algorithms", "OOP", "Design patterns", "Software architecture"],
   },
 ]

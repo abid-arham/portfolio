@@ -11,7 +11,7 @@ export const education: EducationEntry[] = [
     institution: "American International University-Bangladesh",
     credential: "B.Sc. in Computer Science and Engineering",
     detail: "CGPA 3.78",
-    note: "Software Architecture coursework: creational and behavioural design patterns applied to database configuration and payment modules.",
+    note: "Software Architecture coursework: creational and behavioural design patterns applied to database configuration and payment modules. Term project: Aegis, a layered safety architecture for an LLM finance assistant.",
     date: "Expected April 2027",
   },
 ]
